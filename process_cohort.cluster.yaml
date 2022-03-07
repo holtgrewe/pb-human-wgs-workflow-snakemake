@@ -26,3 +26,5 @@ samtools_index_bam:
   cpus: 4
 yak_trioeval:
   cpus: 16
+yak_triobin:
+  cpus: 16
