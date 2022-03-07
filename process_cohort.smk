@@ -125,6 +125,10 @@ include: 'rules/cohort_common.smk'
 # assemble with hifiasm
 include: 'rules/cohort_hifiasm.smk'
 if 'trio_assembly' in config['cohort_targets']:
+    # triobin tables
+    targets.extend([f"cohorts/{cohort}/yak/{trio}.{movie}.triobin.txt"
+                    for movie in ubam_fastq_dict[trio]
+                    for trio in trio_dict.keys()])
     # assembly and stats
     targets.extend([f"cohorts/{cohort}/hifiasm/{trio}.asm.dip.{infix}.{suffix}"
                 for suffix in ['fasta.gz', 'fasta.stats.txt', 'fasta.trioeval.txt']

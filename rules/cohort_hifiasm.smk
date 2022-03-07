@@ -34,6 +34,21 @@ rule yak_count:
     shell: "(yak count -t {threads} -o {output} {input}) > {log} 2>&1"
 
 
+rule yak_triobin:
+    input:
+        fasta = f"cohorts/{cohort}/fasta/{{sample}}/{{movie}}.fasta",
+        parent1_yak = lambda wildcards: f"cohorts/{cohort}/yak/{trio_dict[wildcards.sample]['parent1']}.yak",
+        parent2_yak = lambda wildcards: f"cohorts/{cohort}/yak/{trio_dict[wildcards.sample]['parent2']}.yak"
+    output: f"cohorts/{cohort}/yak/{{sample}}.{{movie}}.triobin.txt"
+    log: f"cohorts/{cohort}/logs/yak/{{sample}}.{{movie}}.yak.triobin.log"
+    benchmark: f"cohorts/{cohort}/benchmarks/yak/triobin/{{sample}}.{{movie}}.yak.tsv"
+    conda: "envs/yak.yaml"
+    params: extra = "-c1 -d1"
+    threads: 16
+    message: "Executing {rule}: Triobinning {input} based on parental k-mers."
+    shell: "yak triobin {params.extra} -t {threads} {input.parent1_yak} {input.parent2_yak} {input.fasta} > {output} 2> {log}"
+
+
 rule hifiasm_assemble:
     input: 
         fasta = lambda wildcards: expand(f"cohorts/{cohort}/fasta/{wildcards.sample}/{{movie}}.fasta", movie=ubam_fastq_dict[wildcards.sample]),
@@ -70,7 +85,7 @@ rule hifiasm_assemble:
             (
                 hifiasm -o {params.prefix} -t {threads} {params.extra} \
                     -1 {input.parent1_yak} -2 {input.parent2_yak} {input.fasta} \
-                && (echo -e "hap1\t{params.parent1}\nhap2\t{params.parent2}" > cohorts/{cohort}/hifiasm/{wildcards.sample}.asm.key.txt) \
+                && (echo -e "hap1\t{params.parent1}\tp\nhap2\t{params.parent2}\tm" > cohorts/{cohort}/hifiasm/{wildcards.sample}.asm.key.txt) \
             ) > {log} 2>&1
             """
     
